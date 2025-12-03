@@ -95,7 +95,7 @@ def print_traceback_matrice(matrice, seq1, seq2, match, mismatch, gap):
             elif current_score == score_sopra + gap:
                 row.append("S")
             elif current_score == score_sinistra + gap:
-                row.appendd("L")
+                row.append("L")
             else:
                 row.append("0")
 
@@ -108,8 +108,8 @@ def main():
 
     """Definire due sequenze T, S con lettere A, C, G, T"""
 
-    seq1 = "AGTAAT"
-    seq2 = "TGAAAT"
+    seq1 = "AAGCTTC"
+    seq2 = "CAGTTT"
 
     match = 1 
     missmatch = -1 
