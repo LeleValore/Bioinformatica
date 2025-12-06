@@ -11,7 +11,7 @@ from Bio import SeqIO
 import os
 
 # Dizionario con le sequenze di test per <MAGED4 in Homo sapiens>
-sequences = {
+sequences_MAGED4 = {
     "protein": """ MAFPRPKRPAPAQEAATEGPSAASGVPQTGPGREVAATRPKTTKSGKALAKTRWVEPQNVVAAAAAKAKM
 ATSIPEPEGAAAATAQHSAEPWARMGGKRTKKSKHLDDEYESSEEERETPAVPPTWRASQPSLTVRAQLA
 PRPPMAPRSQIPSRHVLCLPPRNVTLLQERANKLVKYLMIKDYKKIPIKRADMLKDVIREYDEHFPEIIE
@@ -21,6 +21,31 @@ QNRDPREWKAHFLEAVDDAFKTMDVDMAEEHARAQMRARMNIGDEALIGRWSWDDIQVELLTWDEDGDFG
 DAWARIPFAFWARYHQYILNSNRANRRATWRAGVSSGTNGGASTSVLDGPSTSSTIRTRNAARAGASFFS
 WIQHR""",
     "nucleotide": "ATGAAATTCCCACGACCAAAACGCCCCGCACCCGCACAGGAAGCCGCCACAGAGCCGCCCAGCGCATCC",
+}
+sequence_P53 = {
+    "protein": """MEEPQSDPSVEPPLSQETFSDLWKLLPENNVLSPLPSQAMDDLMLSPDDIEQWFTEDPGPDEAPRMPEAA
+PRVAPAPAAPTPAAPAPAPSWPLSSSVPSQKTYQGSYGFRLGFLHSGTAKSVTCTYSPALNKMFCQLAKT
+CPVQLWVDSTPPPGTRVRAMAIYKQSQHMTEVVRRCPHHERCSDSDGLAPPQHLIRVEGNLRVEYLDDRN
+TFRHSVVVPYEPPEVGSDCTTIHYNYMCNSSCMGGMNRRPILTIITLEDSSGNLLGRNSFEVRVCACAGR
+DRRTEEENLRKKGEPHHELPPGSTKRALPNNTSSSPQPKKKPLDGEYFTLQIRGRERFEMFRELNEALEL
+KDAQAGKEPGGSRAHSSHLKSKKGQSTSRHKKLMFKTEGPDSD
+"""
+}
+sequence_P73 = {
+    'protein': """MAQSTATSPDGGTTFEHLWSSLEPDSTYFDLPQSSRGNNEVVGGTDSSMDVFHLEGMTTSVMAQFNLLSS
+TMDQMSSRAASASPYTPEHAASVPTHSPYAQPSSTFDTMSPAPVIPSNTDYPGPHHFEVTFQQSSTAKSA
+TWTYSPLLKKLYCQIAKTCPIQIKVSTPPPPGTAIRAMPVYKKAEHVTDVVKRCPNHELGRDFNEGQSAP
+ASHLIRVEGNNLSQYVDDPVTGRQSVVVPYEPPQVGTEFTTILYNFMCNSSCVGGMNRRPILIIITLEMR
+DGQVLGRRSFEGRICACPGRDRKADEDHYREQQALNESSAKNGAASKRAFKQSPPAVPALGAGVKKRRHG
+DEDTYYLQVRGRENFEILMKLKESLELMELVPQPLVDSYRQQQQLLQRPSHLQPPSYGPVLSPMNKVHGG
+MNKLPSVNQLVGQPPPHSSAATPNLGPVGPGMLNNHGHAVPANGEMSSSHSAQSMVSGSHCTPPPPYHAD
+PSLVSFLTGLGCPNCIEYFTSQGLQSIYHLQNLTIEDLGALKIPEQYRMTIWRGLQDLKQGHDYSTAQQL
+LRSSNAATISIGGSGELQRQRVMEAVHFRVRHTITIPNRGGPGGGPDEWADFGFDLPDCKARKQPIKEEF
+TEAEIH
+"""
+}
+sequence_BAX = {
+    'protein': """DMFSDGNFNWVRVVALFYFAS"""
 }
 
 # Mapping tra tipo sequenza e parametri BLAST
@@ -44,14 +69,17 @@ def run_blast(sequence_type="protein"):
     Args:
         sequence_type (str): Tipo di sequenza - 'protein' o 'nucleotide'
     """
+    #NB: Se cambi tipo di sequenza, cambia anche il nome della variabile "sequence_BAX..ecc.. basandoti 
+    # sul dizionario definito sopra)
+    print(f"Avvio BLAST per il tipo di sequenza: {sequence_type}")
     
     # Valida il tipo di sequenza
-    if sequence_type not in sequences:
+    if sequence_type not in sequence_BAX:
         print(f"Errore: tipo di sequenza '{sequence_type}' non valido.")
-        print(f"Tipi disponibili: {list(sequences.keys())}")
+        print(f"Tipi disponibili: {list(sequence_BAX.keys())}")
         return
     
-    fasta_string = sequences[sequence_type]
+    fasta_string = sequence_BAX[sequence_type]
     config = blast_config[sequence_type]
     
     print(f"\n{'='*60}")
@@ -75,7 +103,7 @@ def run_blast(sequence_type="protein"):
         result_handle = NCBIWWW.qblast(config["program"], config["database"], sequence)
         
         # Salvo i risultati in un file XML
-        output_file = f"blast_results_{sequence_type}.xml"
+        output_file = f"blast_results_BAX_{sequence_type}.xml"
         with open(output_file, "w") as out_handle:
             out_handle.write(result_handle.read())
         result_handle.close()
