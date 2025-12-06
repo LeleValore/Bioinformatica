@@ -1,38 +1,100 @@
-""" Eseguire l'algoritmo BLAST PROTEIN PROTEIN avendo la sequenza di query in formato FASTA"""
-import ssl # per disabilitare la verifica SSL
+""" Eseguire l'algoritmo BLAST basato sul tipo di sequenza specificato
+    In questo file .py possiamo direttamente inserire il FASTA della Proteina o Nucleotide
+    e verrà eseguito il BLAST appropriato (blastp, blastn, ecc.)
+    I risultati verranno salvati in un file XML chiamato 'blast_results_{tipo}.xml'
+"""
+import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
-
-
 from Bio.Blast import NCBIWWW
-from Bio import SeqIO   
+from Bio import SeqIO
+import os
 
-# Ho il formato FASTA in una variabile stringa
-fasta_string = """ MAFPRPKRPAPAQEAATEGPSAASGVPQTGPGREVAATRPKTTKSGKALAKTRWVEPQNVVAAAAAKAKM
+# Dizionario con le sequenze di test per <MAGED4 in Homo sapiens>
+sequences = {
+    "protein": """ MAFPRPKRPAPAQEAATEGPSAASGVPQTGPGREVAATRPKTTKSGKALAKTRWVEPQNVVAAAAAKAKM
 ATSIPEPEGAAAATAQHSAEPWARMGGKRTKKSKHLDDEYESSEEERETPAVPPTWRASQPSLTVRAQLA
 PRPPMAPRSQIPSRHVLCLPPRNVTLLQERANKLVKYLMIKDYKKIPIKRADMLKDVIREYDEHFPEIIE
 RATYTLEKKFGIHLKEIDKEEHLYILVCTRDSSARLLGKTKDTPRLSLLLVILGVIFMNGNRASEAVLWE
 ALRKMGLRPGVRHPFLGDLRKLITDDFVKQKYLEYKKIPNSNPPEYEFLWGLRARHETSKMRVLRFIAQN
 QNRDPREWKAHFLEAVDDAFKTMDVDMAEEHARAQMRARMNIGDEALIGRWSWDDIQVELLTWDEDGDFG
 DAWARIPFAFWARYHQYILNSNRANRRATWRAGVSSGTNGGASTSVLDGPSTSSTIRTRNAARAGASFFS
-WIQHR"""
+WIQHR""",
+    "nucleotide": "ATGAAATTCCCACGACCAAAACGCCCCGCACCCGCACAGGAAGCCGCCACAGAGCCGCCCAGCGCATCC",
+}
 
-# Scrivo la stringa in un file temporaneo
-with open("temp_query.fasta", "w") as fasta_file:
-    fasta_file.write(">query_sequence\n")
-    fasta_file.write(fasta_string)  
+# Mapping tra tipo sequenza e parametri BLAST
+blast_config = {
+    "protein": {
+        "program": "blastp",
+        "database": "nr",
+        "description": "Protein-Protein BLAST"
+    },
+    "nucleotide": {
+        "program": "blastn",
+        "database": "nt",
+        "description": "Nucleotide-Nucleotide BLAST"
+    },
+}
 
-# Leggo la sequenza dal file FASTA
-record = SeqIO.read("temp_query.fasta", format="fasta") 
-sequence = str(record.seq)
-# Eseguo il BLAST
-result_handle = NCBIWWW.qblast("blastp", "nr", sequence)
-# Salvo i risultati in un file
-with open("blast_results.xml", "w") as out_handle:
-    out_handle.write(result_handle.read())
-result_handle.close()   
-print("BLAST eseguito e risultati salvati in 'blast_results.xml'")
+def run_blast(sequence_type="protein"):
+    """
+    Esegue BLAST basato sul tipo di sequenza specificato.
+    
+    Args:
+        sequence_type (str): Tipo di sequenza - 'protein' o 'nucleotide'
+    """
+    
+    # Valida il tipo di sequenza
+    if sequence_type not in sequences:
+        print(f"Errore: tipo di sequenza '{sequence_type}' non valido.")
+        print(f"Tipi disponibili: {list(sequences.keys())}")
+        return
+    
+    fasta_string = sequences[sequence_type]
+    config = blast_config[sequence_type]
+    
+    print(f"\n{'='*60}")
+    print(f"Esecuzione: {config['description']}")
+    print(f"Program: {config['program']} | Database: {config['database']}")
+    print(f"{'='*60}\n")
+    
+    # Scrivo la sequenza in un file temporaneo
+    temp_file = f"temp_query_{sequence_type}.fasta"
+    with open(temp_file, "w") as fasta_file:
+        fasta_file.write(f">{sequence_type}_sequence\n")
+        fasta_file.write(fasta_string)
+    
+    # Leggo la sequenza dal file FASTA
+    record = SeqIO.read(temp_file, format="fasta")
+    sequence = str(record.seq)
+    
+    # Eseguo BLAST
+    try:
+        print("Invio della richiesta BLAST ai server NCBI...")
+        result_handle = NCBIWWW.qblast(config["program"], config["database"], sequence)
+        
+        # Salvo i risultati in un file XML
+        output_file = f"blast_results_{sequence_type}.xml"
+        with open(output_file, "w") as out_handle:
+            out_handle.write(result_handle.read())
+        result_handle.close()
+        
+        print(f"✓ BLAST completato!")
+        print(f"✓ Risultati salvati in '{output_file}'")
+        
+    except Exception as e:
+        print(f"✗ Errore durante l'esecuzione di BLAST: {e}")
+    
+    finally:
+        # Rimuovo il file temporaneo
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
 
-# Rimuovo il file temporaneo
-import os
-os.remove("temp_query.fasta")   
+# Esegui il BLAST desiderato
+if __name__ == "__main__":
+    # Specifica il tipo di sequenza che vuoi analizzare
+    # Scegli tra: "protein" o "nucleotide"
+    sequence_type = "protein"  
+    
+    run_blast(sequence_type)
